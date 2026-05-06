@@ -19,8 +19,12 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySeeder::class,
             MediaFormatSeeder::class,
-            ItemSeeder::class,      // Primeiro lote de raridades
-            ExtraItemSeeder::class, // O novo lote com itens de nicho
+            ItemSeeder::class,      
+            ExtraItemSeeder::class, 
+            InterestSeeder::class,
+            ReviewSeeder::class,
+            ItemConditionSeeder::class,
+            NovosItensSeeder::class,
         ]);
     }
 }

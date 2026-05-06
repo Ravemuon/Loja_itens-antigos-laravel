@@ -4,75 +4,61 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Item extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'titulo', 
-        'artista_diretor', 
+        'titulo',
+        'artista_diretor',
         'empresa_produtora',
         'elenco_detalhes',
+        'quantidade_estoque',
+        'preco',
+        'capa',
         'descricao',
-        'preco', 
-        'tipo_midia', 
-        'capa', 
-        'category_id', 
-        'media_format_id', 
-        'user_id'
+        'category_id',
+        'user_id',
+        'media_format_id',
     ];
 
-    // --- ACCESSORS (Lógica Automática) ---
-
-    /**
-     * Se não houver autor, retorna um padrão.
-     */
-    public function getArtistaDiretorAttribute($value)
+    // Relacionamento 1:1 com a Ficha de Conservação
+    public function condition()
     {
-        return $value ?: 'Não Informado';
+        return $this->hasOne(ItemCondition::class);
     }
 
-    /**
-     * Se não houver empresa, assume Independente.
-     */
-    public function getEmpresaProdutoraAttribute($value)
+    // Relacionamento N:1 (Muitos itens pertencem a uma categoria)
+    public function category()
     {
-        return $value ?: 'Independente';
+        return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Retorna uma versão curta da descrição para os cards da home.
-     */
-    public function getResumoAttribute()
+    // Relacionamento N:1 (Muitos itens pertencem a um formato de mídia)
+    public function mediaFormat()
     {
-        return Str::limit($this->descricao, 50, '...');
+        return $this->belongsTo(MediaFormat::class);
     }
 
-    // --- RELACIONAMENTOS ---
-
-    // O item pertence a uma categoria
-    public function categoria()
-    {
-        return $this->belongsTo(Category::class, 'category_id');
-    }
-
-    // O item tem um formato de mídia (CD, Vinil, etc)
-    public function formato_midia()
-    {
-        return $this->belongsTo(MediaFormat::class, 'media_format_id');
-    }
-
-    // Um item pode ter vários registros de interesse
-    public function interests()
-    {
-        return $this->hasMany(Interest::class);
-    }
-    
-    // Relacionamento com o usuário que cadastrou
+    // Relacionamento N:1 (Item pertence a um usuário)
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relacionamento 1:N (Item tem muitas avaliações)
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function interestUsers()
+    {
+        return $this->belongsToMany(User::class, 'interests');
+    }
+    public function interests()
+    {
+        return $this->hasMany(Interest::class);
     }
 }

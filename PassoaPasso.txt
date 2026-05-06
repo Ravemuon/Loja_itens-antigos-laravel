@@ -1,0 +1,16 @@
+COMANDOS ESSENCIAIS (LARAVEL)
+
+1. Dependências:
+composer install
+npm install
+
+2. Configuração:
+cp .env.example .env
+php artisan key:generate
+
+3. Banco de Dados (Migrations + Seeds):
+php artisan migrate --seed
+
+4. Rodar Projeto:
+php artisan serve
+npm run dev

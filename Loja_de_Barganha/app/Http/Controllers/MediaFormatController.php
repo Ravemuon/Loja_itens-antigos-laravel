@@ -7,60 +7,43 @@ use Illuminate\Http\Request;
 
 class MediaFormatController extends Controller
 {
-    // Listagem com Busca
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->input('search');
-
-        $formats = MediaFormat::when($search, function ($query, $search) {
-            return $query->where('nome', 'like', "%{$search}%");
-        })->get();
-
-        return view('formats.index', compact('formats', 'search'));
+        $formatos = MediaFormat::withCount('items')->get();
+        return view('media_formats.index', compact('formatos'));
     }
 
-    public function create()
-    {
-        return view('formats.create');
-    }
-
-    // CREATE com Validação
     public function store(Request $request)
     {
         $request->validate([
-            'nome' => 'required|unique:media_formats|min:2',
-        ], [
-            'nome.required' => 'O nome do formato (ex: Vinil) é obrigatório.',
-            'nome.unique' => 'Este formato já está cadastrado.'
+            'nome' => 'required|unique:media_formats|max:255',
+            'sigla' => 'nullable|unique:media_formats|max:10', // novo campo sigla
         ]);
 
         MediaFormat::create($request->all());
-
-        return redirect()->route('formats.index')->with('success', 'Formato de mídia adicionado!');
+        return redirect()->back()->with('success', 'Formato cadastrado!');
     }
 
-    public function edit(MediaFormat $format)
-    {
-        return view('formats.edit', compact('format'));
-    }
-
-    // UPDATE
-    public function update(Request $request, MediaFormat $format)
+    public function update(Request $request, MediaFormat $mediaFormat)
     {
         $request->validate([
-            'nome' => 'required|min:2',
+            'nome' => 'required|max:255|unique:media_formats,nome,' . $mediaFormat->id,
+            'sigla' => 'nullable|max:10|unique:media_formats,sigla,' . $mediaFormat->id, // novo campo sigla
         ]);
 
-        $format->update($request->all());
-
-        return redirect()->route('formats.index')->with('success', 'Formato atualizado!');
+        $mediaFormat->update($request->all());
+        return redirect()->back()->with('success', 'Formato atualizado!');
     }
 
-    // DELETE
-    public function destroy(MediaFormat $format)
+    public function destroy(MediaFormat $mediaFormat)
     {
-        // Opcional: verificar se existem itens usando este formato antes de deletar
-        $format->delete();
-        return redirect()->route('formats.index')->with('success', 'Formato removido!');
+        // Impede a exclusão se houver itens usando este formato
+        if ($mediaFormat->items()->count() > 0) {
+            return redirect()->back()->with('error', 'Não é possível excluir: existem itens vinculados a este formato.');
+        }
+
+        $mediaFormat->delete();
+        return redirect()->back()->with('success', 'Formato removido.');
     }
+    
 }

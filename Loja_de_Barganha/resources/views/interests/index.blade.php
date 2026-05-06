@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container-fluid px-md-4">
+    {{-- HEADER DA PÁGINA --}}
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-danger pb-3">
         <div>
             <h2 class="fw-bold text-uppercase m-0 text-white">
@@ -26,17 +27,18 @@
             <div class="bg-dark border border-danger px-3 py-1 rounded shadow-sm text-center">
                 <small class="text-danger d-block text-uppercase extra-small">Pendentes</small>
                 <span class="fw-bold text-danger">
-                    {{ $interests->where('status', 'pendente')->count() }}
+                    {{ $pendentesCount ?? $interests->where('status', 'pendente')->count() }}
                 </span>
             </div>
             @endif
         </div>
     </div>
 
+    {{-- BARRA DE FILTRO --}}
     <div class="card bg-dark border-secondary mb-4 shadow-sm">
         <div class="card-body p-3">
             <form action="{{ route('interests.index') }}" method="GET" class="row g-2 align-items-center">
-                <div class="col-md-10">
+                <div class="col-md-7">
                     <div class="input-group">
                         <span class="input-group-text bg-black border-secondary text-danger">
                             <i class="bi bi-funnel-fill"></i>
@@ -45,15 +47,22 @@
                                placeholder="Filtrar por título, artista ou diretor..." value="{{ $search ?? '' }}">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-danger w-100 fw-bold border-2">
-                        BUSCAR
-                    </button>
+                <div class="col-md-5">
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('interests.pdf', ['search' => request('search')]) }}" 
+                           class="btn btn-outline-light fw-bold border-2 flex-grow-1">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> PDF
+                        </a>
+                        <button type="submit" class="btn btn-outline-danger fw-bold border-2 flex-grow-1">
+                            <i class="bi bi-search me-1"></i> BUSCAR
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
+    {{-- TABELA DE INTERESSES --}}
     <div class="card bg-dark border-secondary shadow-lg overflow-hidden">
         <div class="table-responsive">
             <table class="table table-dark table-hover align-middle mb-0">
@@ -79,54 +88,74 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($interest->item->capa)
-                                        <img src="{{ asset('storage/' . $interest->item->capa) }}" class="rounded me-3 border border-secondary" style="width: 40px; height: 40px; object-fit: cover;">
+                                        <img src="{{ asset('storage/' . $interest->item->capa) }}" class="rounded me-3 border border-secondary" style="width: 42px; height: 42px; object-fit: cover;">
                                     @else
-                                        <div class="bg-black rounded border border-secondary me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <div class="bg-black rounded border border-secondary me-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
                                             <i class="bi bi-vinyl text-dim small"></i>
                                         </div>
                                     @endif
                                     <div>
-                                        <span class="text-white d-block mb-0 fw-bold small">{{ $interest->item->titulo }}</span>
-                                        <span class="text-danger extra-small text-uppercase">{{ $interest->item->artista_diretor }}</span>
+                                        <span class="text-white d-block mb-0 fw-bold small">{{ Str::limit($interest->item->titulo, 30) }}</span>
+                                        <span class="text-danger extra-small text-uppercase">{{ Str::limit($interest->item->artista_diretor, 25) }}</span>
                                     </div>
                                 </div>
                             </td>
                             @if(auth()->user()->is_admin)
-                            <td>
-                                <span class="text-white small d-block">{{ $interest->user->name ?? 'Visitante' }}</span>
-                                <small class="text-dim extra-small">{{ $interest->ip_address }}</small>
-                            </td>
+                                <td>
+                                    <span class="text-white small d-block">{{ $interest->user->name ?? 'Visitante' }}</span>
+                                    <small class="text-dim extra-small"><i class="bi bi-geo-alt-fill me-1"></i>{{ $interest->ip_address ?? 'IP Oculto' }}</small>
+                                </td>
                             @endif
                             <td class="text-center">
-                                @if($interest->status == 'pendente')
-                                    <span class="badge bg-danger-soft text-danger border border-danger extra-small px-2">AGUARDANDO</span>
-                                @else
-                                    <span class="badge bg-success-soft text-success border border-success extra-small px-2">FINALIZADO</span>
-                                @endif
+                                @php
+                                    $statusClasses = [
+                                        'pendente' => 'bg-danger-soft text-danger border-danger',
+                                        'alugado' => 'bg-warning-soft text-warning border-warning',
+                                        'devolvido' => 'bg-success-soft text-success border-success',
+                                        'cancelado' => 'bg-secondary-soft text-muted border-secondary'
+                                    ];
+                                    $currentClass = $statusClasses[$interest->status] ?? 'bg-dark text-white border-secondary';
+                                @endphp
+                                <span class="badge {{ $currentClass }} border extra-small px-2 text-uppercase">
+                                    {{ $interest->status }}
+                                </span>
                             </td>
                             <td class="text-end">
                                 <span class="price-tag small text-white fw-bold">R$ {{ number_format($interest->item->preco, 2, ',', '.') }}</span>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm border border-secondary rounded">
+                                    {{-- Botão VER ITEM (items.show) --}}
                                     <a href="{{ route('items.show', $interest->item->id) }}" class="btn btn-dark text-info" title="Ver Item">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
+                                    {{-- Botão WHATSAPP --}}
                                     @php
                                         $whatsMsg = "Salve! Tenho interesse no item: " . $interest->item->titulo;
                                         $whatsPhone = auth()->user()->is_admin ? ($interest->user->phone ?? '554999999999') : '554999999999';
                                     @endphp
-                                    <a href="https://wa.me/{{ $whatsPhone }}?text={{ urlencode($whatsMsg) }}" 
+                                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $whatsPhone) }}?text={{ urlencode($whatsMsg) }}" 
                                        target="_blank" class="btn btn-dark text-success" title="Chamar no WhatsApp">
                                         <i class="bi bi-whatsapp"></i>
                                     </a>
 
-                                    <form action="{{ route('interests.destroy', $interest->id) }}" method="POST" onsubmit="return confirm('Deseja cancelar este pedido?')">
+                                    {{-- Botão VISUALIZAR (interests.show) --}}
+                                    <a href="{{ route('interests.show', $interest->id) }}" class="btn btn-dark text-primary" title="Visualizar Interesse">
+                                        <i class="bi bi-file-text"></i>
+                                    </a>
+
+                                    {{-- Botão EDITAR (interests.edit) --}}
+                                    <a href="{{ route('interests.edit', $interest->id) }}" class="btn btn-dark text-warning" title="Editar Interesse">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    {{-- Botão DELETAR (interests.destroy) --}}
+                                    <form action="{{ route('interests.destroy', $interest->id) }}" method="POST" onsubmit="return confirm('Deseja cancelar este pedido?')" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-dark text-danger" title="Cancelar">
-                                            <i class="bi bi-x-circle"></i>
+                                            <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -146,54 +175,21 @@
         </div>
     </div>
 
-    @if(auth()->user()->is_admin)
-    <div class="mt-5 border-top border-secondary pt-4">
-        <h5 class="text-white fw-bold text-uppercase mb-3">
-            <i class="bi bi-lightbulb-fill text-warning me-2"></i> 
-            Insights para <span class="text-warning">Informatics & Zoo</span>
-        </h5>
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="card bg-black border-secondary h-100">
-                    <div class="card-body">
-                        <small class="text-warning text-uppercase fw-bold d-block mb-2">Tendência Rural-Sim</small>
-                        <p class="extra-small text-dim mb-0">Com base nos seus estudos de <strong>Zootecnia</strong>, mídias de simulação e manejo sustentável convertem rápido em Chapecó.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-black border-secondary h-100">
-                    <div class="card-body">
-                        <small class="text-warning text-uppercase fw-bold d-block mb-2">Dev & Sound</small>
-                        <p class="extra-small text-dim mb-0">Como <strong>Técnica em Informática</strong>, você pode focar em trilhas sonoras de games retrô para atrair o público tech local.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-black border-secondary h-100">
-                    <div class="card-body">
-                        <small class="text-warning text-uppercase fw-bold d-block mb-2">Foco Regional</small>
-                        <p class="extra-small text-dim mb-0">Leads de <strong>Chapecó-SC</strong> fecham negócio 40% mais rápido. Priorize contatos locais para entrega em mãos.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
+    {{-- PAGINAÇÃO --}}
     <div class="d-flex justify-content-center mt-4 pb-5">
         {{ $interests->appends(['search' => $search])->links() }}
     </div>
 </div>
 
 <style>
-    .extra-small { font-size: 0.7rem; }
+    .extra-small { font-size: 0.72rem; }
     .price-tag { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
-    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
-    .bg-success-soft { background-color: rgba(25, 135, 84, 0.1); }
-    .table-hover tbody tr:hover {
-        background-color: rgba(220, 53, 69, 0.02) !important;
-    }
-    .text-dim { color: #777; }
+    .bg-danger-soft { background-color: rgba(220, 53, 69, 0.15); }
+    .bg-success-soft { background-color: rgba(25, 135, 84, 0.15); }
+    .bg-warning-soft { background-color: rgba(255, 193, 7, 0.15); }
+    .bg-secondary-soft { background-color: rgba(108, 117, 125, 0.15); }
+    .table-hover tbody tr:hover { background-color: rgba(220, 53, 69, 0.03) !important; }
+    .text-dim { color: #888; }
+    .btn-group .btn i { font-size: 0.9rem; }
 </style>
 @endsection

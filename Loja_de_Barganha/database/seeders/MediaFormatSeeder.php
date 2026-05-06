@@ -7,35 +7,24 @@ use Illuminate\Database\Seeder;
 
 class MediaFormatSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $formatos = [
-            // --- MÚSICA & ÁUDIO (IDs 1 a 3) ---
-            ['nome' => 'Vinil (LP/Compacto)'],        // ID 1
-            ['nome' => 'CD (Áudio)'],                 // ID 2
-            ['nome' => 'Fita Cassete (K7)'],          // ID 3
-
-            // --- FILMES & VÍDEO (IDs 4 a 6) ---
-            ['nome' => 'DVD'],                        // ID 4
-            ['nome' => 'Blu-ray'],                    // ID 5
-            ['nome' => 'Fita VHS'],                   // ID 6
-
-            // --- JOGOS (MÍDIA FÍSICA) (IDs 7 a 10) ---
-            ['nome' => 'Cartucho (Retro)'],           // ID 7
-            ['nome' => 'CD-ROM (PS1/PC)'],            // ID 8
-            ['nome' => 'DVD-ROM (PS2/Xbox/PC)'],      // ID 9
-            ['nome' => 'Cartão de Jogo (Switch/DS)'], // ID 10
-
-            // --- DIGITAL & OUTROS (IDs 11 em diante) ---
-            ['nome' => 'Mídia Digital (Código)'],     // ID 11
-            ['nome' => 'Edição de Colecionador'],      // ID 12
+            ['id' => 1, 'nome' => 'Vinil (LP/EP)', 'sigla' => 'VINIL'],
+            ['id' => 2, 'nome' => 'CD (Compact Disc)', 'sigla' => 'CD'],
+            ['id' => 3, 'nome' => 'Fita Cassete', 'sigla' => 'CASS'],
+            ['id' => 4, 'nome' => 'DVD', 'sigla' => 'DVD'],
+            ['id' => 5, 'nome' => 'Blu-ray', 'sigla' => 'BD'],
+            ['id' => 6, 'nome' => 'VHS', 'sigla' => 'VHS'],
+            ['id' => 7, 'nome' => 'Cartucho', 'sigla' => 'CART'],
+            ['id' => 8, 'nome' => 'CD-ROM', 'sigla' => 'CDROM'],
+            ['id' => 9, 'nome' => 'DVD-ROM', 'sigla' => 'DVDROM'],
+            ['id' => 10, 'nome' => 'Blu-ray Disc (PS3/PS4/Xbox)', 'sigla' => 'BROM'],
+            ['id' => 11, 'nome' => 'Mídia Digital (código de ativação)', 'sigla' => 'DIG'],
         ];
 
-        foreach ($formatos as $f) {
-            MediaFormat::create($f);
+        foreach ($formatos as $formato) {
+            MediaFormat::updateOrCreate(['id' => $formato['id']], $formato);
         }
     }
 }

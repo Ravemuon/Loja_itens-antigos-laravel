@@ -9,15 +9,24 @@ class Interest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['item_id', 'user_id', 'status'];
+    protected $fillable = [
+        'item_id',
+        'user_id',
+        'status',
+        'data_retirada',
+        'data_devolucao',
+    ];
 
-    // Relacionamento: O interesse pertence a um item específico
+    protected $casts = [
+        'data_retirada' => 'date',
+        'data_devolucao' => 'date',
+    ];
+
     public function item()
     {
         return $this->belongsTo(Item::class);
     }
 
-    // Relacionamento: O interesse pode pertencer a um usuário logado
     public function user()
     {
         return $this->belongsTo(User::class);

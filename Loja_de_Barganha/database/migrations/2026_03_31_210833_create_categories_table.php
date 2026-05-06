@@ -6,23 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
-        // Se a tabela não existe, usamos CREATE
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            
+            // OBS PARA APRESENTAÇÃO: CRUD de Categorias expandido com múltiplos campos de dados para validação.
             $table->string('nome')->unique();
-            $table->string('icone')->default('bi-tag'); 
-            $table->enum('tipo_midia', ['Música', 'Jogo', 'Filme', 'Outro'])->default('Outro');
+            $table->text('descricao'); 
+            $table->string('publico_alvo')->default('Livre'); // Ex: Livre, +18, +14
+            $table->enum('tipo_midia', ['Música', 'Jogo', 'Filme', 'Outro']);
+            $table->string('icone')->nullable();
+            
             $table->timestamps();
         });
     }
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('categories');
